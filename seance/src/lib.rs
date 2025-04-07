@@ -81,18 +81,23 @@ pub struct DesignOffset {
 }
 
 /// Errors that can occur when sending the design to the HPGL device.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// There was an error while parsing the SVG file.
-    SvgParseFailure(usvg::Error),
+    // TODO: this is never actually thrown
+    #[error("error parsing SVG data: {0}")]
+    SvgParseFailure(#[from] usvg::Error),
     /// Failed to write to the printer port.
-    PrinterWriteFailure(std::io::Error),
+    #[error("error writing data to printer file: {0}")]
+    PrinterWriteFailure(#[from] std::io::Error),
     /// Provided tool pass set are all disabled.
+    #[error("provided tool passes are all disabled")]
     NoToolPassesEnabled,
     /// Provided tool pass set has the wrong number of passes.
     ///
     /// It should contain `desired` tool passes.
-    WrongNumberOfToolPasses { desired: usize },
+    #[error("wrong number of tool passes given: got {actual}, wanted {desired}")]
+    WrongNumberOfToolPasses { desired: usize, actual: usize },
 }
 
 /// Sends a design file to the printer-like device.
@@ -120,9 +125,9 @@ pub fn cut_file(
     let mut paths_in_mm = resolve_paths(&paths, offset, 1.0);
     filter_paths_to_tool_passes(&mut paths_in_mm, tool_passes);
     let resolved_paths = convert_points_to_plotter_units(&paths_in_mm);
-    let hpgl = generate_hpgl(&resolved_paths, tool_passes).expect("failed to generate hpgl");
+    let hpgl = generate_hpgl(&resolved_paths, tool_passes)?;
     let pcl = wrap_hpgl_in_pcl(hpgl, design_name, tool_passes);
-    fs::write(print_device, pcl.as_bytes()).map_err(Error::PrinterWriteFailure)?;
+    fs::write(print_device, pcl.as_bytes())?;
 
     Ok(())
 }

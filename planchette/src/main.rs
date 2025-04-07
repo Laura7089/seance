@@ -66,15 +66,19 @@ async fn send_file_to_device(Json(mut payload): Json<PrintJob>) -> impl IntoResp
         &payload.offset,
     ) {
         Ok(_) => (StatusCode::OK,).into_response(),
-        Err(Error::SvgParseFailure(err)) => (
-            StatusCode::BAD_REQUEST,
-            format!("Error parsing design: {err}"),
-        )
-            .into_response(),
-        Err(Error::PrinterWriteFailure(err)) => {
+        Err(err @ Error::SvgParseFailure(_)) => {
+            (StatusCode::BAD_REQUEST, format!("{err}")).into_response()
+        }
+        Err(err @ Error::PrinterWriteFailure(_)) => {
             (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
         }
-        Err(Error::NoToolPassesEnabled | Error::WrongNumberOfToolPasses { desired: _ }) => {
+        Err(
+            Error::NoToolPassesEnabled
+            | Error::WrongNumberOfToolPasses {
+                desired: _,
+                actual: _,
+            },
+        ) => {
             unreachable!("UI code verifies tool pass validity")
         }
     }

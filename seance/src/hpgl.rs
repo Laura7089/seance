@@ -26,7 +26,10 @@ pub fn generate_hpgl(
     tool_passes: &[ToolPass],
 ) -> Result<String, Error> {
     if tool_passes.len() != 16 {
-        return Err(Error::WrongNumberOfToolPasses { desired: 16 });
+        return Err(Error::WrongNumberOfToolPasses {
+            desired: 16,
+            actual: tool_passes.len(),
+        });
     }
 
     let (first_pen, _) = tool_passes

@@ -128,4 +128,23 @@ mod tests {
         assert_eq!(&pen_change(idx), expected);
         // TODO: what is the desired behaviour for usize::MAX ?
     }
+
+    #[test]
+    fn test_generate_hpgl_failure() {
+        let mut default_passes = crate::default_passes::default_passes();
+
+        assert!(matches!(
+            generate_hpgl(&HashMap::new(), &default_passes),
+            Err(Error::NoToolPassesEnabled),
+        ));
+
+        default_passes[0].set_enabled(true);
+        assert!(matches!(
+            generate_hpgl(&HashMap::new(), &default_passes[0..5]),
+            Err(Error::WrongNumberOfToolPasses {
+                desired: 16,
+                actual: 5
+            }),
+        ));
+    }
 }

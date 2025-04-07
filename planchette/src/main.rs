@@ -11,7 +11,7 @@ use axum::{
     Json, Router,
 };
 use planchette::PrintJob;
-use seance::{cut_file, svg::parse_svg, SendToDeviceError, ToolPass};
+use seance::{cut_file, svg::parse_svg, Error, ToolPass};
 
 #[tokio::main]
 async fn main() {
@@ -66,13 +66,13 @@ async fn send_file_to_device(Json(mut payload): Json<PrintJob>) -> impl IntoResp
         &payload.offset,
     ) {
         Ok(_) => (StatusCode::OK,).into_response(),
-        Err(SendToDeviceError::ErrorParsingSvg(err)) => (
+        Err(Error::SvgParseFailure(err)) => (
             StatusCode::BAD_REQUEST,
             format!("Error parsing design: {err}"),
         )
             .into_response(),
-        Err(SendToDeviceError::FailedToWriteToPrinter(err)) => {
-            (StatusCode::INTERNAL_SERVER_ERROR, err).into_response()
+        Err(Error::PrinterWriteFailure(err)) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
         }
     }
 }

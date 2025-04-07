@@ -82,11 +82,11 @@ pub struct DesignOffset {
 
 /// Errors that can occur when sending the design to the HPGL device.
 #[derive(Debug)]
-pub enum SendToDeviceError {
+pub enum Error {
     /// There was an error while parsing the SVG file.
-    ErrorParsingSvg(usvg::Error),
+    SvgParseFailure(usvg::Error),
     /// Failed to write to the printer port.
-    FailedToWriteToPrinter(String),
+    PrinterWriteFailure(std::io::Error),
 }
 
 /// Sends a design file to the printer-like device.
@@ -109,14 +109,14 @@ pub fn cut_file(
     tool_passes: &Vec<ToolPass>,
     print_device: &PathBuf,
     offset: &DesignOffset,
-) -> Result<(), SendToDeviceError> {
+) -> Result<(), Error> {
     let paths = get_paths_grouped_by_colour(design_file);
     let mut paths_in_mm = resolve_paths(&paths, offset, 1.0);
     filter_paths_to_tool_passes(&mut paths_in_mm, tool_passes);
     let resolved_paths = convert_points_to_plotter_units(&paths_in_mm);
     let hpgl = generate_hpgl(&resolved_paths, tool_passes).expect("failed to generate hpgl");
     let pcl = wrap_hpgl_in_pcl(hpgl, design_name, tool_passes);
-    fs::write(print_device, pcl.as_bytes()).unwrap();
+    fs::write(print_device, pcl.as_bytes()).map_err(Error::PrinterWriteFailure)?;
 
     Ok(())
 }

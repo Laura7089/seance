@@ -29,13 +29,11 @@ pub fn generate_hpgl(
         return Err("Exactly 16 tool passes are required");
     }
 
-    let Some((first_pen, _)) = tool_passes
+    let (first_pen, _) = tool_passes
         .iter()
         .enumerate()
         .find(|(_, pass)| *pass.enabled())
-    else {
-        return Err("No tool passes enabled");
-    };
+        .ok_or("No tool passes enabled")?;
 
     // In, Default Coordinate System, Pen Up, Select first pen, reset line type, move to 0,0.
     let var_name = format!(

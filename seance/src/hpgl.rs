@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use crate::{
     paths::{mm_to_hpgl_units, PathColour, ResolvedPath},
-    ToolPass,
+    Error, ToolPass,
 };
 
 /// Generates the HPGL for a design.
@@ -24,16 +24,16 @@ use crate::{
 pub fn generate_hpgl(
     resolved_paths: &HashMap<PathColour, Vec<ResolvedPath>>,
     tool_passes: &[ToolPass],
-) -> Result<String, &'static str> {
+) -> Result<String, Error> {
     if tool_passes.len() != 16 {
-        return Err("Exactly 16 tool passes are required");
+        return Err(Error::WrongNumberOfToolPasses { desired: 16 });
     }
 
     let (first_pen, _) = tool_passes
         .iter()
         .enumerate()
         .find(|(_, pass)| *pass.enabled())
-        .ok_or("No tool passes enabled")?;
+        .ok_or(Error::NoToolPassesEnabled)?;
 
     // In, Default Coordinate System, Pen Up, Select first pen, reset line type, move to 0,0.
     let var_name = format!(

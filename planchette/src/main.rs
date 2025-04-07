@@ -74,5 +74,8 @@ async fn send_file_to_device(Json(mut payload): Json<PrintJob>) -> impl IntoResp
         Err(Error::PrinterWriteFailure(err)) => {
             (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
         }
+        Err(Error::NoToolPassesEnabled | Error::WrongNumberOfToolPasses { desired: _ }) => {
+            unreachable!("UI code verifies tool pass validity")
+        }
     }
 }

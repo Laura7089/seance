@@ -87,6 +87,12 @@ pub enum Error {
     SvgParseFailure(usvg::Error),
     /// Failed to write to the printer port.
     PrinterWriteFailure(std::io::Error),
+    /// Provided tool pass set are all disabled.
+    NoToolPassesEnabled,
+    /// Provided tool pass set has the wrong number of passes.
+    ///
+    /// It should contain `desired` tool passes.
+    WrongNumberOfToolPasses { desired: usize },
 }
 
 /// Sends a design file to the printer-like device.

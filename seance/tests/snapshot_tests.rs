@@ -21,7 +21,7 @@ fn logo() {
     let resolved_paths = seance::paths::convert_points_to_plotter_units(&paths_in_mm);
     insta::assert_debug_snapshot!("logo plotted paths", &resolved_paths);
 
-    let hpgl = seance::hpgl::generate_hpgl(&resolved_paths, &tool_passes);
+    let hpgl = seance::hpgl::generate_hpgl(&resolved_paths, &tool_passes).unwrap();
     insta::assert_snapshot!("logo HPGL output", &hpgl);
 
     let pcl = seance::pcl::wrap_hpgl_in_pcl(hpgl, design_name, &tool_passes);
@@ -66,7 +66,7 @@ fn black_rectangle() {
     let resolved_paths = seance::paths::convert_points_to_plotter_units(&paths_in_mm);
     insta::assert_debug_snapshot!("rectangle plotted paths", &resolved_paths);
 
-    let hpgl = seance::hpgl::generate_hpgl(&resolved_paths, &tool_passes);
+    let hpgl = seance::hpgl::generate_hpgl(&resolved_paths, &tool_passes).unwrap();
     insta::assert_snapshot!("rectangle HPGL output", &hpgl);
 
     let pcl = seance::pcl::wrap_hpgl_in_pcl(hpgl, design_name, &tool_passes);
